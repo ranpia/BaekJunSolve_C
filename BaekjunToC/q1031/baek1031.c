@@ -4,6 +4,9 @@
 // 팀에서 대진횟수가 큰 사람부터 대진을 짜야함
 // 순차 탐색으로 찾은 후에 대진표 만들기
 // + 사전순 확인하기 
+// 결국 그래프 형태로 해서 간선으로 풀어야 될듯
+// 대전을 결정하는 알고리즘에서 사전순으로 배열까지 생각해야됨
+// 왜냐면 대전순서가 망가짐
 
 int makeBracket(int **bracket, int *teamM, int *teamN, int n, int m, int *x, int *y)
 {
@@ -69,7 +72,7 @@ int main()
     int *x = (int *)malloc(sizeof(int) * N); // 팀 N 오름차순 인덱스 배열
     int *y = (int *)malloc(sizeof(int) * M); // 팀 M 오름차순 인덱스 배열
     int **bracket = (int **)malloc(sizeof(int *) * N); // 대진표
-    for (int i = 0; i < M; i++)
+    for (int i = 0; i < N; i++)
     {
         bracket[i] = (int *)malloc(sizeof(int) * M);
     }
@@ -93,7 +96,6 @@ int main()
             bracket[i][j] = 0;
         }
     }
-
     searchLarge(teamN, N, x);
     searchLarge(teamM, M, y);
     int result = makeBracket(bracket, teamM, teamN, N, M, x, y);
