@@ -2,8 +2,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#define MAX_EDGE 10000
-#define MAX_VERTEX 1000
+#define MAX_EDGE 10001
+#define MAX_VERTEX 1001
+
+// bfs dfs 알고리즘은 문제없음
+// 큐에서 최대 갯수 들어왔을때 문제?
 
 typedef struct
 {
@@ -25,6 +28,14 @@ void init_Graph(Graph *g)
     }
 }
 
+void reset_visit(Graph *g)
+{ // not init, graph struct must have Max vertex
+    for (int i = 0; i < g->n; i++)
+    {
+        g->visit[i] = 0;
+    }
+}
+
 void insert_Vertex(Graph *g, int vertex)
 {
     if (g->n >= MAX_VERTEX - 1)
@@ -43,6 +54,61 @@ void insert_Edge(Graph *g, int v1, int v2)
     {
         g->adg_mat[v1 - 1][v2 - 1] += 1;
         g->adg_mat[v2 - 1][v1 - 1] += 1;
+    }
+}
+
+// 큐
+typedef struct
+{
+    int arr[MAX_VERTEX];
+    int rear;
+    int top;
+} Queue;
+
+void init_Queue(Queue *q)
+{
+    q->rear = 0;
+    q->top = -1;
+    for (int i = 0; i < MAX_VERTEX; i++)
+    {
+        q->arr[i] = 0;
+    }
+}
+
+int sizeof_queue(Queue *q)
+{
+    int size = q->top - (q->rear) + 1;
+    if (size <= -1)
+    {
+        return 0;
+    }
+    return size;
+}
+
+void insert_queue(Queue *q, int insertNum)
+{
+    if ((q->top) < MAX_VERTEX)
+    {
+        q->arr[++(q->top)] = insertNum;
+    }
+    else
+    {
+        printf("out of range, init queue");
+        return;
+    }
+}
+
+int pop_queue(Queue *q)
+{
+    if (sizeof_queue(q) > 0)
+    {
+        int num = q->arr[q->rear++];
+        return num;
+    }
+    else
+    {
+        init_Queue(q);
+        return -1;
     }
 }
 
@@ -122,27 +188,52 @@ void DFS(Graph *graph, Stack *stack, int current_vertex, int vertexNum, int *dfs
             i++;
         }
     }
-    int k=sizeof_Stack(stack);
-    dfs[k-1] = pop_Stack(stack);
+}
+
+void BFS(Graph *graph, Queue *queue, int current_vertex, int vertexNum, int *bfs)
+{
+    graph->visit[current_vertex - 1] += 1;
+    bfs[queue->rear] = current_vertex;
+    bool insert=true;
+    for (int i = 0; i < vertexNum; i++)
+    {
+        if (graph->adg_mat[current_vertex - 1][i] == 1 && graph->visit[i] == 0)
+        {
+            for (int j=queue->rear; j<=queue->top;j++){
+                if (queue->arr[j]==(i+1))
+                    insert = false;
+            }
+            if (insert)
+                insert_queue(queue, i + 1);
+        }
+    }
+    for (int i = 0; i < sizeof_queue(queue); i++)
+    {
+        BFS(graph, queue, pop_queue(queue), vertexNum, bfs);
+    }
 }
 
 int main()
 {
-    int vertexNum, edge, first_v;
-    int dfs[MAX_VERTEX], bfs[MAX_VERTEX]; //
+    int vertexNum, edge, first_v;         // initial value
+    int dfs[MAX_VERTEX], bfs[MAX_VERTEX]; // final results
     int v1, v2;                           // 간선 입력
-    for (int i=0; i<MAX_VERTEX;i++){
-        dfs[i]=0;
-        bfs[i]=0;
+    for (int i = 0; i < MAX_VERTEX; i++)
+    {
+        dfs[i] = 0;
+        bfs[i] = 0;
     }
 
     Graph *g;
     g = (Graph *)malloc(sizeof(Graph));
     Stack *s;
     s = (Stack *)malloc(sizeof(Stack));
+    Queue *q;
+    q = (Queue *)malloc(sizeof(Queue));
 
     init_Graph(g);
     Init_Stack(s);
+    init_Queue(q);
 
     scanf("%d %d %d", &vertexNum, &edge, &first_v);
     insert_Vertex(g, vertexNum);
@@ -154,11 +245,23 @@ int main()
     }
 
     DFS(g, s, first_v, vertexNum, dfs);
-    for (int i = 0; i < vertexNum; i++)
+    for (int k=sizeof_Stack(s)-1;k>=0;k--){
+        dfs[k]=pop_Stack(s);
+    }
+    reset_visit(g);
+    BFS(g, q, first_v, vertexNum, bfs);
+
+    for (int i = 0; dfs[i]!=0; i++)
     {
-        printf("%d ",dfs[i]);
+        printf("%d ", dfs[i]);
+    }
+    printf("\n");
+    for (int i = 0; bfs[i]!=0; i++)
+    {
+        printf("%d ", bfs[i]);
     }
 
     free(s);
     free(g);
+    free(q);
 }
